@@ -1,0 +1,49 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    container_name: delivery-rabbitmq
+    ports:
+      - "127.0.0.1:5672:5672"   # Solo accesible localmente
+      - "127.0.0.1:15672:15672" # Interfaz de administración (solo local)
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-delivery_app}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-A3K2pIBnR3QZLujNnqPcZpCVFXKueH0ohRuk}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: delivery-consumer
+    depends_on:
+      - rabbitmq
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    volumes:
+      - consumer_logs:/usr/src/app/logs
+    restart: unless-stopped
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  consumer_logs:
+    driver: local
