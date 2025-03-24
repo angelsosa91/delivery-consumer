@@ -1,6 +1,6 @@
 services:
   rabbitmq:
-    image: rabbitmq:3.9-management
+    image: rabbitmq:3.12-management
     container_name: delivery-rabbitmq
     ports:
       - "127.0.0.1:5672:5672"   # Solo accesible localmente
