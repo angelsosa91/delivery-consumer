@@ -12,7 +12,7 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
     networks:
-      - app-network
+      - delivery-network
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
@@ -34,13 +34,13 @@ services:
       - consumer_logs:/usr/src/app/logs
     restart: unless-stopped
     networks:
-      - app-network
+      - delivery-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
 networks:
-  app-network:
-    driver: bridge
+  delivery-network:
+    external: true
 
 volumes:
   rabbitmq_data:
