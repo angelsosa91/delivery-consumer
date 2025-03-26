@@ -35,7 +35,7 @@ class OriginService {
 
       // Consultar si existe origen sincronizado
       const [rows] = await connection.execute(
-        `SELECT o.name, o.phone, o.address, o.email, o.latitude, o.longitude, o.user_id, o.status, o.references, o.default, o.sync_id FROM ${dbConfig.apiDatabase}.origin o WHERE o.id = ?`, [originData.id]
+        `SELECT o.id, o.name, o.phone, o.address, o.email, o.latitude, o.longitude, o.user_id, o.status, o.references, o.default, o.sync_id FROM ${dbConfig.apiDatabase}.origin o WHERE o.id = ?`, [originData.id]
       );
       
       const origin = rows.length > 0 ? rows[0] : null;
@@ -44,13 +44,10 @@ class OriginService {
       if (origin && origin.sync_id && origin.sync_id > 0) {
         // Actualizar todos si viene default 1
         if(origin.default === 1)
-          await this.updateDefaultOrigin(connection, origin.user_id);
+          await this.updateDefaultOrigin(connection, origin);
         // Actualizar origen existente
         originId = await this.updateExistingOrigin(connection, origin);
       } else {
-        // Actualizar todos si viene default 1
-        if(originData.default === 1)
-          await this.updateDefaultOrigin(connection, origin.user_id);
         // Insertar nuevo origen
         originId = await this.insertNewOrigin(connection, originData.id);
       }
@@ -87,23 +84,23 @@ class OriginService {
     }
   }
 
-  async updateDefaultOrigin(connection, user_id) {
+  async updateDefaultOrigin(connection, origin) {
     const [resultUpdateDb] = await connection.execute(
-      `UPDATE ${dbConfig.database}.mp_origen SET predeterminado = 0 WHERE id_users = ?`, [user_id]
+      `UPDATE ${dbConfig.database}.mp_origen SET predeterminado = 0 WHERE id_users = ?`, [origin.user_id]
     );
 
     const [resultUpdateDbAPI] = await connection.execute(
-      `UPDATE ${dbConfig.apiDatabase}.origin o SET o.default = 0 WHERE user_id = ?`, [user_id]
+      `UPDATE ${dbConfig.apiDatabase}.origin o SET o.default = 0 WHERE o.user_id = ? AND o.id NOT IN(?)`, [origin.user_id, origin.id]
     );
     
     if (resultUpdateDb.affectedRows === 0) {
-      throw new Error(`No se actualizaron los origines del user: ${user_id} en la base de datos origin`);
+      throw new Error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos origin`);
     }
     if (resultUpdateDbAPI.affectedRows === 0) {
-      throw new Error(`No se actualizaron los origines del user: ${user_id} en la base de datos api`);
+      throw new Error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos api`);
     }
     
-    logger.info(`Origenes del usuario actualizados con ID: ${user_id}`);
+    logger.info(`Origenes del usuario actualizados con ID: ${origin.user_id}`);
   }
 
   async updateExistingOrigin(connection, origin) {
