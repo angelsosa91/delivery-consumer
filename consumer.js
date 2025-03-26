@@ -19,7 +19,7 @@ async function main() {
     logger.info('🚀 Iniciando los consumidor de RabbitMQ para las colas');
     
     // Iniciar consumidor para pedidos
-    await queueService.consumeQueue('orders_queue', async (orderData) => {
+    await queueService.consumeQueue('order_queue', async (orderData) => {
       await orderService.processOrder(orderData);
     });
 

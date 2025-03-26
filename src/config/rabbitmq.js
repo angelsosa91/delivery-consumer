@@ -5,7 +5,7 @@ const rabbitmqConfig = {
   port: parseInt(process.env.RABBITMQ_PORT || '5672', 10),
   user: process.env.RABBITMQ_USER || 'guest',
   pass: process.env.RABBITMQ_PASS || 'guest',
-  queue_order: process.env.RABBITMQ_QUEUE_ORDER || 'orders_queue',
+  queue_order: process.env.RABBITMQ_QUEUE_ORDER || 'order_queue',
   queue_customer: process.env.RABBITMQ_QUEUE_CUSTOMER || 'customer_queue',
   queue_origin: process.env.RABBITMQ_QUEUE_ORIGIN || 'origin_queue',
   
