@@ -48,6 +48,9 @@ class OriginService {
         // Actualizar origen existente
         originId = await this.updateExistingOrigin(connection, origin);
       } else {
+        // Actualizar todos si viene default 1
+        if(origin.default === 1)
+          await this.updateDefaultOrigin(connection, origin);
         // Insertar nuevo origen
         originId = await this.insertNewOrigin(connection, originData.id);
       }
