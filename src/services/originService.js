@@ -97,10 +97,10 @@ class OriginService {
     );
     
     if (resultUpdateDb.affectedRows === 0) {
-      throw new Error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos origin`);
+      logger.error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos origin`);
     }
     if (resultUpdateDbAPI.affectedRows === 0) {
-      throw new Error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos api`);
+      logger.error(`No se actualizaron los origines del user: ${origin.user_id} en la base de datos api`);
     }
     
     logger.info(`Origenes del usuario actualizados con ID: ${origin.user_id}`);
