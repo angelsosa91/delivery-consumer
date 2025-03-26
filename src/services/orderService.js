@@ -3,6 +3,19 @@ const logger = require('../utils/logger');
 const dbConfig = require('../config/database');
 
 class OrderService {
+  constructor() {
+    this.pool = mysql.createPool({
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      database: dbConfig.database,
+      timezone: dbConfig.timezone,
+      waitForConnections: true,
+      connectionLimit: dbConfig.connectionLimit,
+      queueLimit: dbConfig.queueLimit
+    });
+  }
+
   // Procesar un pedido recibido desde la cola
   async processOrder(orderData) {
     if (!orderData || !orderData.id) {
@@ -13,15 +26,8 @@ class OrderService {
     
     let connection;
     try {
-      // Crear conexión a la base de datos
-      connection = await mysql.createConnection({
-        host: dbConfig.host,
-        user: dbConfig.user,
-        password: dbConfig.password,
-        database: dbConfig.database,
-        timezone: dbConfig.timezone
-      });
-      
+      // Obtener conexión del pool
+      connection = await this.pool.getConnection();
       logger.debug(`Conexión a base de datos establecida`);
       
       // Iniciar transacción
@@ -30,7 +36,7 @@ class OrderService {
       
       // Insertar pedido
       const [resultInsert] = await connection.execute(
-        `INSERT INTO ${dbConfig.database}.pedidos (
+        `INSERT INTO ??.pedidos (
           nombreReceptor, telefonoReceptor, descripcionEnvio, formaPago, emisorTelefono, 
           idUser, distancia, monto, latitudDesde, longitudDesde, latitudHasta, longitudHasta, 
           tiempo, idaYvuelta, factura, exenta, factura_ruc, factura_razonsocial, medio, 
@@ -42,9 +48,9 @@ class OrderService {
           user_id, distance, amount, latitude_from, longitude_from, latitude_to, longitude_to, 
           delivery_time, with_return, invoice, invoice_exempt, invoice_doc, invoice_name, 
           'WEB', service_type, scheduled_date, order_type, wallet, bank, 1, 'MOTOCICLETA'
-        FROM ${dbConfig.apiDatabase}.orders 
+        FROM ??.orders 
         WHERE id = ?`,
-        [orderData.id]
+        [dbConfig.database, dbConfig.apiDatabase, orderData.id]
       );
       
       if (resultInsert.affectedRows === 0) {
@@ -55,20 +61,7 @@ class OrderService {
       logger.info(`Pedido insertado con ID local: ${lastId}`);
       
       // Insertar referencias del pedido
-      try {
-        const [resultRef] = await connection.execute(
-          `INSERT INTO ${dbConfig.database}.pedidos_referencias (id_pedidos, nro_doc, estado) 
-          SELECT ?, document_number, status 
-          FROM ${dbConfig.apiDatabase}.orders_references 
-          WHERE order_id = ?`,
-          [lastId, orderData.id]
-        );
-        
-        logger.info(`Referencias insertadas: ${resultRef.affectedRows}`);
-      } catch (refError) {
-        logger.warn(`No se pudieron insertar referencias: ${refError.message}`);
-        // Continuamos con el proceso aunque fallen las referencias
-      }
+      await this.insertOrderReferences(connection, lastId, orderData.id);
       
       // Confirmar transacción
       await connection.commit();
@@ -91,14 +84,32 @@ class OrderService {
       
       throw error;
     } finally {
-      // Cerrar la conexión a la base de datos
+      // Liberar la conexión al pool
       if (connection) {
         try {
-          await connection.end();
+          await connection.release();
         } catch (err) {
-          logger.error(`Error al cerrar la conexión: ${err.message}`);
+          logger.error(`Error al liberar la conexión: ${err.message}`);
         }
       }
+    }
+  }
+
+  // Método separado para insertar referencias
+  async insertOrderReferences(connection, orderId, originalOrderId) {
+    try {
+      const [resultRef] = await connection.execute(
+        `INSERT INTO ??._pedidos_referencias (id_pedidos, nro_doc, estado) 
+        SELECT ?, document_number, status 
+        FROM ??.orders_references 
+        WHERE order_id = ?`,
+        [dbConfig.database, orderId, dbConfig.apiDatabase, originalOrderId]
+      );
+      
+      logger.info(`Referencias insertadas: ${resultRef.affectedRows}`);
+    } catch (refError) {
+      logger.warn(`No se pudieron insertar referencias: ${refError.message}`);
+      // No relanzamos el error para no interrumpir el flujo principal
     }
   }
 }

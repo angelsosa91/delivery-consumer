@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const queueService = require('./src/services/queueService');
 const orderService = require('./src/services/orderService');
+const customerService = require('./src/services/customerService');
+const originService = require('./src/services/originService');
 const logger = require('./src/utils/logger');
 
 // Asegurarse de que exista el directorio de logs
@@ -14,26 +16,27 @@ if (!fs.existsSync(logsDir)) {
 // Función principal
 async function main() {
   try {
-    logger.info('🚀 Iniciando consumidor de RabbitMQ para pedidos');
+    logger.info('🚀 Iniciando los consumidor de RabbitMQ para las colas');
     
-    // Conectar a RabbitMQ
-    await queueService.connect();
-    
-    // Consumir mensajes
-    await queueService.consume(async (data) => {
-      try {
-        await orderService.processOrder(data);
-        logger.info(`✅ Pedido ${data.id} procesado correctamente`);
-      } catch (error) {
-        logger.error(`❌ Error al procesar pedido ${data.id}: ${error.message}`);
-        throw error; // Propagar el error para que se reintente el mensaje
-      }
+    // Iniciar consumidor para pedidos
+    await queueService.consumeQueue('orders_queue', async (orderData) => {
+      await orderService.processOrder(orderData);
+    });
+
+    // Iniciar consumidor para clientes
+    await queueService.consumeQueue('customer_queue', async (customerData) => {
+      await customerService.processCustomer(customerData);
+    });
+
+    // Iniciar consumidor para orígenes
+    await queueService.consumeQueue('origin_queue', async (originData) => {
+      await originService.processOrigin(originData);
     });
     
-    logger.info('👂 Consumidor activo y esperando mensajes...');
+    logger.info('👂 Consumidores activos y esperando mensajes...');
     
   } catch (error) {
-    logger.error('Error fatal en el consumidor:', error);
+    logger.error('Error al iniciar los consumidores:', error);
     process.exit(1);
   }
 }

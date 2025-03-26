@@ -2,16 +2,19 @@ const amqp = require('amqplib');
 const logger = require('../utils/logger');
 const config = require('../config/rabbitmq');
 
-// Clase para gestionar la conexión y operaciones con RabbitMQ
 class QueueService {
   constructor() {
     this.connection = null;
     this.channel = null;
     this.connected = false;
     this.connecting = false;
+    this.queues = {
+      order: config.queue_order,
+      customer: config.queue_customer,
+      origin: config.queue_origin
+    };
   }
 
-  // Conectar con RabbitMQ
   async connect() {
     if (this.connected || this.connecting) return;
     
@@ -42,7 +45,14 @@ class QueueService {
       });
       
       this.channel = await this.connection.createChannel();
-      await this.channel.assertQueue(config.queue, { durable: true });
+      
+      // Asegurar que todas las colas existen
+      await Promise.all([
+        this.channel.assertQueue(this.queues.order, { durable: true }),
+        this.channel.assertQueue(this.queues.customer, { durable: true }),
+        this.channel.assertQueue(this.queues.origin, { durable: true })
+      ]);
+      
       await this.channel.prefetch(1);
       
       this.connected = true;
@@ -60,7 +70,6 @@ class QueueService {
     }
   }
 
-  // Reconectar automáticamente
   reconnect() {
     if (!this.connected && !this.connecting) {
       logger.info('Intentando reconectar a RabbitMQ en 10 segundos...');
@@ -68,29 +77,33 @@ class QueueService {
     }
   }
 
-  // Consumir mensajes
-  async consume(callback) {
+  // Método genérico para consumir de cualquier cola
+  async consumeQueue(queueName, callback) {
     if (!this.connected) {
       await this.connect();
     }
     
-    logger.info(`Esperando mensajes en la cola '${config.queue}'...`);
+    if (!this.queues[queueName]) {
+      throw new Error(`Nombre de cola no válido: ${queueName}`);
+    }
     
-    return this.channel.consume(config.queue, async (msg) => {
+    const queue = this.queues[queueName];
+    logger.info(`Esperando mensajes en la cola '${queue}'...`);
+    
+    return this.channel.consume(queue, async (msg) => {
       if (msg) {
         try {
           const messageContent = msg.content.toString();
           const data = JSON.parse(messageContent);
           
-          logger.info(`Mensaje recibido: ${JSON.stringify(data)}`);
+          logger.info(`Mensaje recibido de ${queue}: ${JSON.stringify(data)}`);
           
           await callback(data);
           this.channel.ack(msg);
           
         } catch (error) {
-          logger.error('Error procesando mensaje:', error);
+          logger.error(`Error procesando mensaje de ${queue}:`, error);
           
-          // Rechazar mensaje con requeue después de un retraso
           setTimeout(() => {
             try {
               this.channel.nack(msg, false, true);
@@ -103,7 +116,6 @@ class QueueService {
     });
   }
 
-  // Cerrar conexiones
   async close() {
     try {
       if (this.channel) {
