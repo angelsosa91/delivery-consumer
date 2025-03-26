@@ -35,11 +35,7 @@ class CustomerService {
 
       // Consultar si existe cliente sincronizado
       const [rows] = await connection.execute(
-        `SELECT full_name, phone, address, email, latitude, longitude, 
-         user_id, status, references, sync_id 
-         FROM ${dbConfig.apiDatabase}.customer 
-         WHERE id = ?`,
-        [customerData.id]
+        `SELECT c.full_name, c.phone, c.address, c.email, c.latitude, c.longitude, c.user_id, c.status, c.references, c.sync_id FROM ${dbConfig.apiDatabase}.customer c WHERE c.id = ?`, [customerData.id]
       );
       
       const cliente = rows.length > 0 ? rows[0] : null;
@@ -121,8 +117,8 @@ class CustomerService {
         nombre, telefono, direccion, correo, latitud, longitud, id_users, estado, referencia
       ) 
       SELECT 
-        full_name, phone, address, email, latitude, longitude, user_id, status, references
-      FROM ${dbConfig.apiDatabase}.customer 
+        c.full_name, c.phone, c.address, c.email, c.latitude, c.longitude, c.user_id, c.status, c.references
+      FROM ${dbConfig.apiDatabase}.customer c
       WHERE id = ?`,
       [customerId]
     );

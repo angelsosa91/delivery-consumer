@@ -35,11 +35,7 @@ class OriginService {
 
       // Consultar si existe origen sincronizado
       const [rows] = await connection.execute(
-        `SELECT name, phone, address, email, latitude, longitude, 
-         user_id, status, references, default, sync_id 
-         FROM ${dbConfig.apiDatabase}.origin 
-         WHERE id = ?`,
-        [originData.id]
+        `SELECT o.name, o.phone, o.address, o.email, o.latitude, o.longitude, o.user_id, o.status, o.references, o.default, o.sync_id FROM ${dbConfig.apiDatabase}.origin o WHERE o.id = ?`, [originData.id]
       );
       
       const origin = rows.length > 0 ? rows[0] : null;
@@ -119,13 +115,11 @@ class OriginService {
     // Insertar origen
     const [resultInsert] = await connection.execute(
       `INSERT INTO ${dbConfig.database}.mp_origen (
-        nombre, telefono, direccion, correo, latitud, longitud, 
-        id_users, estado, referencia, predeterminado
+        nombre, telefono, direccion, correo, latitud, longitud, id_users, estado, referencia, predeterminado
       ) 
       SELECT 
-        name, phone, address, email, latitude, longitude, 
-        user_id, status, references, default
-      FROM ${dbConfig.apiDatabase}.origin 
+        o.name, o.phone, o.address, o.email, o.latitude, o.longitude, o.user_id, o.status, o.references, o.default
+      FROM ${dbConfig.apiDatabase}.origin o
       WHERE id = ?`,
       [originId]
     );
