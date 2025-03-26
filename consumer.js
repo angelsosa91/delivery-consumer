@@ -19,17 +19,17 @@ async function main() {
     logger.info('🚀 Iniciando los consumidor de RabbitMQ para las colas');
     
     // Iniciar consumidor para pedidos
-    await queueService.consumeQueue('order_queue', async (orderData) => {
+    await queueService.consumeQueue('order', async (orderData) => {
       await orderService.processOrder(orderData);
     });
 
     // Iniciar consumidor para clientes
-    await queueService.consumeQueue('customer_queue', async (customerData) => {
+    await queueService.consumeQueue('customer', async (customerData) => {
       await customerService.processCustomer(customerData);
     });
 
     // Iniciar consumidor para orígenes
-    await queueService.consumeQueue('origin_queue', async (originData) => {
+    await queueService.consumeQueue('origin', async (originData) => {
       await originService.processOrigin(originData);
     });
     
