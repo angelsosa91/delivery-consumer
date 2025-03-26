@@ -42,9 +42,15 @@ class OriginService {
       let originId;
       
       if (origin && origin.sync_id && origin.sync_id > 0) {
+        // Actualizar todos si viene default 1
+        if(origin.default === 1)
+          await this.updateDefaultOrigin(connection, origin.user_id);
         // Actualizar origen existente
         originId = await this.updateExistingOrigin(connection, origin);
       } else {
+        // Actualizar todos si viene default 1
+        if(originData.default === 1)
+          await this.updateDefaultOrigin(connection, origin.user_id);
         // Insertar nuevo origen
         originId = await this.insertNewOrigin(connection, originData.id);
       }
@@ -79,6 +85,25 @@ class OriginService {
         }
       }
     }
+  }
+
+  async updateDefaultOrigin(connection, user_id) {
+    const [resultUpdateDb] = await connection.execute(
+      `UPDATE ${dbConfig.database}.mp_origen SET predeterminado = 0 WHERE id_users = ?`, [user_id]
+    );
+
+    const [resultUpdateDbAPI] = await connection.execute(
+      `UPDATE ${dbConfig.apiDatabase}.origin o SET o.default = 0 WHERE user_id = ?`, [user_id]
+    );
+    
+    if (resultUpdateDb.affectedRows === 0) {
+      throw new Error(`No se actualizaron los origines del user: ${user_id} en la base de datos origin`);
+    }
+    if (resultUpdateDbAPI.affectedRows === 0) {
+      throw new Error(`No se actualizaron los origines del user: ${user_id} en la base de datos api`);
+    }
+    
+    logger.info(`Origenes del usuario actualizados con ID: ${user_id}`);
   }
 
   async updateExistingOrigin(connection, origin) {
