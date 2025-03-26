@@ -99,7 +99,7 @@ class OrderService {
   async insertOrderReferences(connection, orderId, originalOrderId) {
     try {
       const [resultRef] = await connection.execute(
-        `INSERT INTO ${dbConfig.database}._pedidos_referencias (id_pedidos, nro_doc, estado) 
+        `INSERT INTO ${dbConfig.database}.pedidos_referencias (id_pedidos, nro_doc, estado) 
         SELECT ?, document_number, status 
         FROM ${dbConfig.apiDatabase}.orders_references 
         WHERE order_id = ?`,
