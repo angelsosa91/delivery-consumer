@@ -36,7 +36,7 @@ class OrderService {
       
       // Insertar pedido
       const [resultInsert] = await connection.execute(
-        `INSERT INTO ??.pedidos (
+        `INSERT INTO ${dbConfig.database}.pedidos (
           nombreReceptor, telefonoReceptor, descripcionEnvio, formaPago, emisorTelefono, 
           idUser, distancia, monto, latitudDesde, longitudDesde, latitudHasta, longitudHasta, 
           tiempo, idaYvuelta, factura, exenta, factura_ruc, factura_razonsocial, medio, 
@@ -48,9 +48,9 @@ class OrderService {
           user_id, distance, amount, latitude_from, longitude_from, latitude_to, longitude_to, 
           delivery_time, with_return, invoice, invoice_exempt, invoice_doc, invoice_name, 
           'WEB', service_type, scheduled_date, order_type, wallet, bank, 1, 'MOTOCICLETA'
-        FROM ??.orders 
+        FROM ${dbConfig.apiDatabase}.orders 
         WHERE id = ?`,
-        [dbConfig.database, dbConfig.apiDatabase, orderData.id]
+        [orderData.id]
       );
       
       if (resultInsert.affectedRows === 0) {
@@ -99,11 +99,11 @@ class OrderService {
   async insertOrderReferences(connection, orderId, originalOrderId) {
     try {
       const [resultRef] = await connection.execute(
-        `INSERT INTO ??._pedidos_referencias (id_pedidos, nro_doc, estado) 
+        `INSERT INTO ${dbConfig.database}._pedidos_referencias (id_pedidos, nro_doc, estado) 
         SELECT ?, document_number, status 
-        FROM ??.orders_references 
+        FROM ${dbConfig.apiDatabase}.orders_references 
         WHERE order_id = ?`,
-        [dbConfig.database, orderId, dbConfig.apiDatabase, originalOrderId]
+        [orderId, originalOrderId]
       );
       
       logger.info(`Referencias insertadas: ${resultRef.affectedRows}`);

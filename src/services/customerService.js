@@ -37,9 +37,9 @@ class CustomerService {
       const [rows] = await connection.execute(
         `SELECT full_name, phone, address, email, latitude, longitude, 
          user_id, status, references, sync_id 
-         FROM ??.customer 
+         FROM ${dbConfig.apiDatabase}.customer 
          WHERE id = ?`,
-        [dbConfig.apiDatabase, customerData.id]
+        [customerData.id]
       );
       
       const cliente = rows.length > 0 ? rows[0] : null;
@@ -88,12 +88,11 @@ class CustomerService {
 
   async updateExistingCustomer(connection, cliente) {
     const [resultUpdate] = await connection.execute(
-      `UPDATE ??.mp_clientes 
+      `UPDATE ${dbConfig.database}.mp_clientes 
        SET nombre = ?, telefono = ?, direccion = ?, correo = ?, 
            latitud = ?, longitud = ?, id_users = ?, estado = ?, referencia = ? 
        WHERE id = ?`,
       [
-        dbConfig.database,
         cliente.full_name, 
         cliente.phone, 
         cliente.address, 
@@ -118,14 +117,14 @@ class CustomerService {
   async insertNewCustomer(connection, customerId) {
     // Insertar cliente
     const [resultInsert] = await connection.execute(
-      `INSERT INTO ??.mp_clientes (
+      `INSERT INTO ${dbConfig.database}.mp_clientes (
         nombre, telefono, direccion, correo, latitud, longitud, id_users, estado, referencia
       ) 
       SELECT 
         full_name, phone, address, email, latitude, longitude, user_id, status, references
-      FROM ??.customer 
+      FROM ${dbConfig.apiDatabase}.customer 
       WHERE id = ?`,
-      [dbConfig.database, dbConfig.apiDatabase, customerId]
+      [customerId]
     );
     
     if (resultInsert.affectedRows === 0) {
@@ -143,8 +142,8 @@ class CustomerService {
 
   async updateSyncId(connection, customerId, syncId) {
     const [resultUpdate] = await connection.execute(
-      `UPDATE ??.customer SET sync_id = ? WHERE id = ?`,
-      [dbConfig.apiDatabase, syncId, customerId]
+      `UPDATE ${dbConfig.apiDatabase}.customer SET sync_id = ? WHERE id = ?`,
+      [syncId, customerId]
     );
 
     if (resultUpdate.affectedRows === 0) {

@@ -37,9 +37,9 @@ class OriginService {
       const [rows] = await connection.execute(
         `SELECT name, phone, address, email, latitude, longitude, 
          user_id, status, references, default, sync_id 
-         FROM ??.origin 
+         FROM ${dbConfig.apiDatabase}.origin 
          WHERE id = ?`,
-        [dbConfig.apiDatabase, originData.id]
+        [originData.id]
       );
       
       const origin = rows.length > 0 ? rows[0] : null;
@@ -87,13 +87,12 @@ class OriginService {
 
   async updateExistingOrigin(connection, origin) {
     const [resultUpdate] = await connection.execute(
-      `UPDATE ??.mp_origen 
+      `UPDATE ${dbConfig.database}.mp_origen 
        SET nombre = ?, telefono = ?, direccion = ?, correo = ?, 
            latitud = ?, longitud = ?, id_users = ?, estado = ?, 
            referencia = ?, predeterminado = ? 
        WHERE id = ?`,
       [
-        dbConfig.database,
         origin.name, 
         origin.phone, 
         origin.address, 
@@ -119,16 +118,16 @@ class OriginService {
   async insertNewOrigin(connection, originId) {
     // Insertar origen
     const [resultInsert] = await connection.execute(
-      `INSERT INTO ??.mp_origen (
+      `INSERT INTO ${dbConfig.database}.mp_origen (
         nombre, telefono, direccion, correo, latitud, longitud, 
         id_users, estado, referencia, predeterminado
       ) 
       SELECT 
         name, phone, address, email, latitude, longitude, 
         user_id, status, references, default
-      FROM ??.origin 
+      FROM ${dbConfig.apiDatabase}.origin 
       WHERE id = ?`,
-      [dbConfig.database, dbConfig.apiDatabase, originId]
+      [originId]
     );
     
     if (resultInsert.affectedRows === 0) {
@@ -146,8 +145,8 @@ class OriginService {
 
   async updateSyncId(connection, originId, syncId) {
     const [resultUpdate] = await connection.execute(
-      `UPDATE ??.origin SET sync_id = ? WHERE id = ?`,
-      [dbConfig.apiDatabase, syncId, originId]
+      `UPDATE ${dbConfig.apiDatabase}.origin SET sync_id = ? WHERE id = ?`,
+      [syncId, originId]
     );
 
     if (resultUpdate.affectedRows === 0) {
