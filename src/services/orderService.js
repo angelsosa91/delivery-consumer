@@ -41,13 +41,13 @@ class OrderService {
           idUser, distancia, monto, latitudDesde, longitudDesde, latitudHasta, longitudHasta, 
           tiempo, idaYvuelta, factura, exenta, factura_ruc, factura_razonsocial, medio, 
           tipoServicio, fechaProgramada, tipo_pedido, depositoBilletera, depositoBancario, 
-          envio_empresa, categoria_vehiculo
+          envio_empresa, categoria_vehiculo, estado_pago
         ) 
         SELECT 
           receiver_name, receiver_phone, description, payment_method, sender_phone, 
           user_id, distance, amount, latitude_from, longitude_from, latitude_to, longitude_to, 
           delivery_time, with_return, invoice, invoice_exempt, invoice_doc, invoice_name, 
-          'WEB', service_type, scheduled_date, order_type, wallet, bank, 1, 'MOTOCICLETA'
+          'WEB', service_type, scheduled_date, order_type, wallet, bank, 1, delivery_type, 1
         FROM ${dbConfig.apiDatabase}.orders 
         WHERE id = ?`,
         [orderData.id]
