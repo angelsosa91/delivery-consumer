@@ -23,8 +23,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: delivery-consumer:latest
-    container_name: delivery-consumer
+    image: integration-consumer:latest
+    container_name: integration-consumer
     depends_on:
       - rabbitmq
     env_file:
