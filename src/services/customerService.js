@@ -7,9 +7,9 @@ class CustomerService {
     this.pool = mysql.createPool({
       host: dbConfig.host,
       user: dbConfig.user,
-      port: dbConfig.port,
       password: dbConfig.password,
       database: dbConfig.database,
+      port: dbConfig.port,
       timezone: dbConfig.timezone,
       waitForConnections: true,
       connectionLimit: dbConfig.connectionLimit,
