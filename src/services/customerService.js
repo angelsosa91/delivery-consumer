@@ -10,6 +10,9 @@ class CustomerService {
       password: dbConfig.password,
       database: dbConfig.database,
       port: dbConfig.port,
+      ssl: {
+        rejectUnauthorized: true
+      },
       timezone: dbConfig.timezone,
       waitForConnections: true,
       connectionLimit: dbConfig.connectionLimit,
