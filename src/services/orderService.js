@@ -7,6 +7,7 @@ class OrderService {
     this.pool = mysql.createPool({
       host: dbConfig.host,
       user: dbConfig.user,
+      port: dbConfig.port,
       password: dbConfig.password,
       database: dbConfig.database,
       timezone: dbConfig.timezone,
