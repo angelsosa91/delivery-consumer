@@ -1,4 +1,5 @@
 const logger = require('../utils/logger');
+const dbConfig = require('../config/database');
 const pool = require('../config/mysqlPool');
 
 class OriginService {
