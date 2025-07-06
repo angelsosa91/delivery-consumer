@@ -6,6 +6,7 @@ const orderService = require('./src/services/orderService');
 const customerService = require('./src/services/customerService');
 const originService = require('./src/services/originService');
 const logger = require('./src/utils/logger');
+const verifyDatabaseConnection = require('./src/utils/mysqlChecker');
 
 // Asegurarse de que exista el directorio de logs
 const logsDir = path.join(__dirname, 'logs');
@@ -16,6 +17,11 @@ if (!fs.existsSync(logsDir)) {
 // Función principal
 async function main() {
   try {
+    logger.info('🚀 Iniciando verificación de conectividad');
+
+    // Verificar MySQL antes de conectar a RabbitMQ
+    await verifyDatabaseConnection();
+
     logger.info('🚀 Iniciando los consumidor de RabbitMQ para las colas');
     
     // Iniciar consumidor para pedidos

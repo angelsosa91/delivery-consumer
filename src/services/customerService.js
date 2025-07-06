@@ -1,25 +1,8 @@
-const mysql = require('mysql2/promise');
 const logger = require('../utils/logger');
-const dbConfig = require('../config/database');
+const pool = require('../config/mysqlPool');
 
 class CustomerService {
-  constructor() {
-    this.pool = mysql.createPool({
-      host: dbConfig.host,
-      user: dbConfig.user,
-      password: dbConfig.password,
-      database: dbConfig.database,
-      port: dbConfig.port,
-      ssl: {
-        rejectUnauthorized: true
-      },
-      timezone: dbConfig.timezone,
-      waitForConnections: true,
-      connectionLimit: dbConfig.connectionLimit,
-      queueLimit: dbConfig.queueLimit
-    });
-  }
-
+  // Procesar un cliente recibido desde la cola
   async processCustomer(customerData) {
     if (!customerData || !customerData.id) {
       throw new Error('Datos de cliente inválidos');
@@ -30,7 +13,7 @@ class CustomerService {
     let connection;
     try {
       // Obtener conexión del pool
-      connection = await this.pool.getConnection();
+      connection = await pool.getConnection();
       logger.debug(`Conexión a base de datos establecida`);
       
       // Iniciar transacción
