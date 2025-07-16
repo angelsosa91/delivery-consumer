@@ -118,12 +118,13 @@ class CustomerService {
     const lastId = resultInsert.insertId;
     logger.info(`Cliente insertado con ID local: ${lastId}`);
     
-    // Actualizar sync_id en la base de datos de origen
+    // sincronizar datos de clientes
     await this.updateSyncId(connection, customerId, lastId);
     
     return lastId;
   }
 
+  // Actualizar sync_id en la base de datos de origen
   async updateSyncId(connection, customerId, syncId) {
     const [resultUpdate] = await connection.execute(
       `UPDATE ${dbConfig.apiDatabase}.customer SET sync_id = ? WHERE id = ?`,

@@ -49,6 +49,9 @@ class OrderService {
       
       // Insertar referencias del pedido
       await this.insertOrderReferences(connection, lastId, orderData.id);
+
+      // sincronizar datos de clientes
+      await this.updateSyncId(connection, orderData.id, lastId);
       
       // Confirmar transacción
       await connection.commit();
@@ -98,6 +101,20 @@ class OrderService {
       logger.warn(`No se pudieron insertar referencias: ${refError.message}`);
       // No relanzamos el error para no interrumpir el flujo principal
     }
+  }
+
+  // Actualizar sync_id en la base de datos de origen
+  async updateSyncId(connection, orderId, syncId) {
+    const [resultUpdate] = await connection.execute(
+      `UPDATE ${dbConfig.apiDatabase}.orders SET sync_id = ? WHERE id = ?`,
+      [syncId, orderId]
+    );
+
+    if (resultUpdate.affectedRows === 0) {
+      throw new Error(`No se actualizó la orden con ID ${orderId} en la base de datos de origen`);
+    }
+
+    logger.info(`Sync ID actualizado para la orden ${orderId}: ${syncId}`);
   }
 }
 
