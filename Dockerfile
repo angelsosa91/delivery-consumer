@@ -16,5 +16,8 @@ COPY . .
 # Establecer node_env a producción
 ENV NODE_ENV=production
 
+# Puerto para la API HTTP
+EXPOSE 3003
+
 # Iniciar la aplicación
 CMD ["node", "consumer.js"]

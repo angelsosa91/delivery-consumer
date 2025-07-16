@@ -50,6 +50,9 @@ async function main() {
 // Iniciar aplicación
 main();
 
+// Iniciar servidor HTTP de Express (API REST)
+require('./src/api'); // 👈 Esta línea importa y ejecuta el servidor Express
+
 // Manejar señales para cerrar limpiamente
 process.on('SIGINT', async () => {
   logger.info('Recibida señal SIGINT, cerrando conexiones...');
